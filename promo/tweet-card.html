@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>DeepSeek Status Bar for Copilot — promo card</title>
+<style>
+  :root{
+    --bg:#0a0c0f; --card:#12151a; --line:#232932;
+    --ink:#e8ebf0; --dim:#8b93a1; --faint:#5b6472;
+    --green:#2fd48f; --green-dim:#1a3d30;
+    --amber:#f5b642; --amber-dim:#3d3118;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{width:1600px;height:900px;overflow:hidden}
+  body{
+    width:1600px;height:900px;overflow:hidden;background:var(--bg);
+    font-family:"Segoe UI",-apple-system,BlinkMacSystemFont,"Inter",system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;display:block;
+  }
+  .mono{font-family:"Cascadia Code","JetBrains Mono",Consolas,"SF Mono",monospace}
+
+  #card{
+    position:absolute; top:0; left:0; width:1600px; height:900px; overflow:hidden;
+    background:
+      radial-gradient(1100px 560px at 12% -10%, #16202b 0%, transparent 62%),
+      radial-gradient(900px 500px at 96% 108%, #1a1424 0%, transparent 58%),
+      var(--bg);
+    padding:50px 72px; display:flex; flex-direction:column;
+  }
+  #card::before{
+    content:""; position:absolute; inset:0; pointer-events:none; opacity:.16;
+    background-image:linear-gradient(var(--line) 1px,transparent 1px),
+                     linear-gradient(90deg,var(--line) 1px,transparent 1px);
+    background-size:80px 80px;
+    mask-image:radial-gradient(1500px 950px at 32% 18%,#000 0%,transparent 88%);
+  }
+  .z{position:relative; z-index:1}
+
+  header{display:flex; align-items:flex-start; justify-content:space-between; gap:40px}
+  .eyebrow{font-size:14px; letter-spacing:.22em; text-transform:uppercase;
+           color:var(--faint); font-weight:600; margin-bottom:14px}
+  h1{font-size:55px; line-height:1.05; letter-spacing:-.025em; font-weight:700; color:var(--ink)}
+  h1 .sub{display:block; font-size:32px; font-weight:400; color:var(--dim);
+          letter-spacing:-.01em; margin-top:10px}
+  .fork{text-align:right; font-size:13.5px; line-height:1.7; color:var(--faint);
+        border-left:1px solid var(--line); padding-left:22px; margin-top:4px; white-space:nowrap}
+  .fork b{color:var(--dim); font-weight:600}
+
+  /* ---- rate table ---- */
+  .rates{display:flex; gap:20px; margin-top:26px}
+  .rcard{flex:1; background:var(--card); border:1px solid var(--line); border-radius:15px;
+         padding:22px 26px; display:flex; flex-direction:column; gap:12px}
+  .rcard .hdr{display:flex; align-items:center; gap:10px; font-size:15.5px; font-weight:600}
+  .dot{width:10px;height:10px;border-radius:50%}
+  .rcard .pill{margin-left:auto; font-size:11.5px; font-weight:700; letter-spacing:.06em;
+               padding:3px 9px; border-radius:999px}
+  .green .dot{background:var(--green); box-shadow:0 0 14px rgba(47,212,143,.55)}
+  .green .hdr{color:var(--green)} .green .pill{background:var(--green-dim); color:var(--green)}
+  .amber .dot{background:var(--amber); box-shadow:0 0 14px rgba(245,182,66,.5)}
+  .amber .hdr{color:var(--amber)} .amber .pill{background:var(--amber-dim); color:var(--amber)}
+
+  table{width:100%; border-collapse:collapse; font-size:15.5px}
+  td{padding:5px 0; color:var(--dim)}
+  td.v{text-align:right; color:var(--ink); font-weight:600; font-size:17.5px}
+  tr+tr td{border-top:1px solid rgba(255,255,255,.045)}
+
+  /* ---- 24h timeline ---- */
+  .tl-wrap{margin-top:26px; background:var(--card); border:1px solid var(--line);
+           border-radius:15px; padding:24px 28px 20px}
+  .tl-head{display:flex; align-items:baseline; justify-content:space-between; margin-bottom:16px}
+  .tl-head .t{font-size:15.5px; font-weight:600; color:var(--ink)}
+  .tl-head .n{font-size:12.5px; color:var(--faint); letter-spacing:.02em}
+  .tl{display:flex; height:52px; border-radius:9px; overflow:hidden; border:1px solid var(--line)}
+  .tl i{display:block; position:relative}
+  .tl .off{background:linear-gradient(180deg,#132a22,#0f1f1a)}
+  .tl .pk{background:linear-gradient(180deg,#40331a,#2e2513)}
+  .tl .pk::after{content:""; position:absolute; inset:0;
+    background:linear-gradient(180deg,rgba(245,182,66,.32),rgba(245,182,66,.06));
+    border-left:1px solid rgba(245,182,66,.75); border-right:1px solid rgba(245,182,66,.75)}
+  .ticks{position:relative; height:15px; margin-top:9px; font-size:12px; color:var(--faint)}
+  .ticks span{position:absolute; top:0}
+
+  .legend{display:flex; gap:24px; margin-top:12px; font-size:13px; color:var(--dim)}
+  .legend em{font-style:normal; display:inline-flex; align-items:center; gap:8px}
+  .legend em::before{content:""; width:12px; height:12px; border-radius:4px; display:block}
+  .l-off::before{background:#152e26; border:1px solid #1f4a3b}
+  .l-pk::before{background:#332912; border:1px solid rgba(245,182,66,.75)}
+
+  /* ---- status bar mockups ---- */
+  .bars{margin-top:auto; display:flex; flex-direction:column; gap:14px}
+  .barlabel{font-size:12.5px; letter-spacing:.18em; text-transform:uppercase;
+            color:var(--faint); font-weight:600; margin-bottom:2px}
+  .vsc{display:flex; align-items:center; background:#14181e; border:1px solid #2b323c;
+       border-radius:12px; height:64px; padding-left:22px; overflow:hidden;
+       box-shadow:0 18px 44px rgba(0,0,0,.5)}
+  .vsc .left{font-size:14px; color:var(--faint)}
+  .vsc .sp{flex:1}
+  .vsc .sb{height:100%; display:flex; align-items:center; gap:14px; padding:0 22px;
+           font-size:21px; font-weight:600; letter-spacing:.01em}
+  .vsc .sb.off{background:rgba(47,212,143,.11); color:var(--green);
+               border-left:1px solid rgba(47,212,143,.35)}
+  .vsc .sb.pk{background:rgba(245,182,66,.12); color:var(--amber);
+              border-left:1px solid rgba(245,182,66,.4)}
+  .cd{font-variant-numeric:tabular-nums}
+  .sep{opacity:.28; font-weight:400}
+  .tok{color:var(--ink); opacity:.92; font-size:19px; font-weight:500}
+  .card-ico{width:20px; height:14px; opacity:.85; flex:none}
+  .card-ico rect{fill:none; stroke:currentColor; stroke-width:1.7}
+  .card-ico line{stroke:currentColor; stroke-width:1.7}
+
+  footer{display:flex; align-items:center; justify-content:space-between;
+         margin-top:16px; font-size:13.5px; color:var(--faint)}
+  footer .repo{color:var(--dim)}
+  footer code{color:var(--ink); font-weight:600}
+</style>
+</head>
+<body>
+<div id="card">
+  <header class="z">
+    <div>
+      <div class="eyebrow">VS Code Extension · MIT</div>
+      <h1>DeepSeek Status Bar
+        <span class="sub">Know when you're paying double — <em style="font-style:normal;color:var(--amber)">before</em> you spend it.</span>
+      </h1>
+    </div>
+    <div class="fork">
+      <b>Fork</b> of zxzxn3/deepseek-status-bar-for-copilot<br>
+      Real <span class="mono">usage</span> captured per request · not an estimate
+    </div>
+  </header>
+
+  <div class="rates z">
+    <div class="rcard green">
+      <div class="hdr"><span class="dot"></span>Off-peak <span class="pill">×1</span></div>
+      <table>
+        <tr><td>Input · cache hit</td><td class="v">$0.003</td></tr>
+        <tr><td>Input · cache miss</td><td class="v">$0.15</td></tr>
+        <tr><td>Output</td><td class="v">$0.60</td></tr>
+      </table>
+    </div>
+    <div class="rcard amber">
+      <div class="hdr"><span class="dot"></span>Peak <span class="pill">×2</span></div>
+      <table>
+        <tr><td>Input · cache hit</td><td class="v">$0.006</td></tr>
+        <tr><td>Input · cache miss</td><td class="v">$0.30</td></tr>
+        <tr><td>Output</td><td class="v">$1.20</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="tl-wrap z">
+    <div class="tl-head">
+      <span class="t">Peak windows</span>
+      <span class="n">01:00–04:00 &amp; 06:00–10:00 UTC · Monday–Friday · everything else is off-peak, weekends included</span>
+    </div>
+    <div class="tl">
+      <i class="off" style="width:4.1667%"></i>
+      <i class="pk"  style="width:12.5%"></i>
+      <i class="off" style="width:8.3333%"></i>
+      <i class="pk"  style="width:16.6667%"></i>
+      <i class="off" style="width:58.3333%"></i>
+    </div>
+    <div class="ticks">
+      <span style="left:0">00</span>
+      <span style="left:16.6667%">04</span>
+      <span style="left:33.3333%">08</span>
+      <span style="left:50%">12</span>
+      <span style="left:66.6667%">16</span>
+      <span style="left:83.3333%">20</span>
+      <span style="left:100%;transform:translateX(-100%)">24</span>
+    </div>
+    <div class="legend">
+      <em class="l-off">Off-peak — half price</em>
+      <em class="l-pk">Peak — 2× rate</em>
+    </div>
+  </div>
+
+  <div class="bars z">
+    <div class="barlabel">What lands in your status bar</div>
+
+    <div class="vsc">
+      <span class="left">DeepSeek Status Bar</span>
+      <span class="sp"></span>
+      <span class="sb off">
+        <span>💚</span><span class="cd">2h14m</span>
+        <svg class="card-ico" viewBox="0 0 22 16"><rect x="1" y="1" width="20" height="14" rx="2.5"/><line x1="1" y1="5.5" x2="21" y2="5.5"/></svg>
+        <span class="mono">$0.0031<span class="sep">/</span>$0.0012</span>
+        <span class="tok mono">1.20M<span class="sep">/</span>0.90M</span>
+      </span>
+    </div>
+
+    <div class="vsc">
+      <span class="left">DeepSeek Status Bar</span>
+      <span class="sp"></span>
+      <span class="sb pk">
+        <span>⚡</span><span class="cd">0h45m</span>
+        <svg class="card-ico" viewBox="0 0 22 16"><rect x="1" y="1" width="20" height="14" rx="2.5"/><line x1="1" y1="5.5" x2="21" y2="5.5"/></svg>
+        <span class="mono">$0.0078<span class="sep">/</span>$0.0012</span>
+        <span class="tok mono">1.20M<span class="sep">/</span>0.90M</span>
+      </span>
+    </div>
+  </div>
+
+  <footer>
+    <span class="repo">real <span class="mono">usage</span> per request · cache hit / miss / output split · local proxy, your key never leaves your machine</span>
+    <span class="repo">github.com/<code>Z1Code</code>/deepseek-status-bar-for-copilot</span>
+  </footer>
+</div>
+</body>
+</html>

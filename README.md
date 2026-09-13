@@ -1,5 +1,9 @@
 <h1 align="center">DeepSeek Status Bar for Copilot</h1>
 
+<p align="center">
+  <img src="promo/tweet-card-1600x900.png" alt="DeepSeek Status Bar for Copilot — status bar showing an off-peak 💚 2h14m badge and a peak ⚡ 0h45m badge, with the off-peak and peak rate tables and the 01:00–04:00 / 06:00–10:00 UTC peak windows" width="880">
+</p>
+
 > **🍴 This is a fork.** It builds on
 > [zxzxn3/deepseek-status-bar-for-copilot](https://github.com/zxzxn3/deepseek-status-bar-for-copilot)
 > (MIT) — all credit for the original extension goes to [@zxzxn3](https://github.com/zxzxn3).

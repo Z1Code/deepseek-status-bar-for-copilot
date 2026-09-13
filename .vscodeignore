@@ -11,3 +11,6 @@ package-lock.json
 **/*.map
 .gitignore
 *.psd
+promo/**
+PATCH-NOTES.md
+*.vsix

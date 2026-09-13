@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>DeepSeek Status Bar — social cover 1280x640</title>
+<style>
+  :root{
+    --bg:#0a0c0f; --card:#12151a; --line:#232932;
+    --ink:#e8ebf0; --dim:#8b93a1; --faint:#5b6472;
+    --green:#2fd48f; --amber:#f5b642;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{width:1280px;height:640px;overflow:hidden}
+  body{width:1280px;height:640px;overflow:hidden;background:var(--bg);
+    font-family:"Segoe UI",-apple-system,BlinkMacSystemFont,"Inter",system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased}
+  .mono{font-family:"Cascadia Code","JetBrains Mono",Consolas,"SF Mono",monospace}
+
+  #card{position:absolute;top:0;left:0;width:1280px;height:640px;overflow:hidden;
+    background:
+      radial-gradient(900px 460px at 14% -12%, #17222e 0%, transparent 62%),
+      radial-gradient(760px 420px at 94% 112%, #1b1526 0%, transparent 58%),
+      var(--bg);
+    padding:44px 56px; display:flex; flex-direction:column}
+  #card::before{content:""; position:absolute; inset:0; pointer-events:none; opacity:.15;
+    background-image:linear-gradient(var(--line) 1px,transparent 1px),
+                     linear-gradient(90deg,var(--line) 1px,transparent 1px);
+    background-size:64px 64px;
+    mask-image:radial-gradient(1100px 700px at 30% 22%,#000 0%,transparent 88%)}
+  .z{position:relative; z-index:1}
+
+  .eyebrow{font-size:12.5px; letter-spacing:.24em; text-transform:uppercase;
+           color:var(--faint); font-weight:600; margin-bottom:12px}
+  h1{font-size:54px; line-height:1.03; letter-spacing:-.028em; font-weight:700; color:var(--ink)}
+  .sub{font-size:26px; color:var(--dim); letter-spacing:-.01em; margin-top:8px}
+  .sub em{font-style:normal; color:var(--amber)}
+
+  .mock{margin-top:38px; display:flex; flex-direction:column; gap:14px}
+  .vsc{display:flex; align-items:center; background:#14181e; border:1px solid #2b323c;
+       border-radius:11px; height:74px; overflow:hidden; box-shadow:0 16px 38px rgba(0,0,0,.5)}
+  .vsc .left{font-size:13px; color:var(--faint); padding-left:20px}
+  .vsc .sp{flex:1}
+  .vsc .sb{height:100%; display:flex; align-items:center; gap:13px; padding:0 20px;
+           font-size:19.5px; font-weight:600}
+  .vsc .sb.off{background:rgba(47,212,143,.11); color:var(--green);
+               border-left:1px solid rgba(47,212,143,.35)}
+  .vsc .sb.pk{background:rgba(245,182,66,.12); color:var(--amber);
+              border-left:1px solid rgba(245,182,66,.4)}
+  .tok{color:var(--ink); opacity:.92; font-size:17.5px; font-weight:500}
+  .sep{opacity:.28; font-weight:400}
+  .card-ico{width:19px; height:13px; opacity:.85; flex:none}
+  .card-ico rect{fill:none; stroke:currentColor; stroke-width:1.7}
+  .card-ico line{stroke:currentColor; stroke-width:1.7}
+
+  .strip{margin-top:32px; display:flex; align-items:center; gap:16px}
+  .strip .lbl{font-size:11.5px; letter-spacing:.16em; text-transform:uppercase;
+              color:var(--faint); font-weight:600; white-space:nowrap}
+  .tl{flex:1; display:flex; height:34px; border-radius:7px; overflow:hidden; border:1px solid var(--line)}
+  .tl i{display:block; position:relative}
+  .tl .off{background:linear-gradient(180deg,#132a22,#0f1f1a)}
+  .tl .pk{background:linear-gradient(180deg,#40331a,#2e2513)}
+  .tl .pk::after{content:""; position:absolute; inset:0;
+    background:linear-gradient(180deg,rgba(245,182,66,.34),rgba(245,182,66,.06));
+    border-left:1px solid rgba(245,182,66,.75); border-right:1px solid rgba(245,182,66,.75)}
+
+  .rates{margin-top:30px; display:flex; gap:14px}
+  .chip{flex:1; background:var(--card); border:1px solid var(--line); border-radius:12px;
+        padding:19px 20px; display:flex; align-items:center; gap:12px}
+  .dot{width:9px;height:9px;border-radius:50%;flex:none}
+  .chip .n{font-size:13.5px; font-weight:600; white-space:nowrap}
+  .chip .v{margin-left:auto; font-size:16px; font-weight:600; color:var(--ink);
+           letter-spacing:.01em; white-space:nowrap}
+  .chip.g .dot{background:var(--green); box-shadow:0 0 12px rgba(47,212,143,.55)}
+  .chip.g .n{color:var(--green)}
+  .chip.a .dot{background:var(--amber); box-shadow:0 0 12px rgba(245,182,66,.5)}
+  .chip.a .n{color:var(--amber)}
+
+  footer{margin-top:auto; display:flex; align-items:center; justify-content:space-between;
+         font-size:13px; color:var(--faint)}
+  footer code{color:var(--ink); font-weight:600}
+</style>
+</head>
+<body>
+<div id="card">
+  <div class="z">
+    <div class="eyebrow">VS Code Extension · MIT</div>
+    <h1>DeepSeek Status Bar</h1>
+    <div class="sub">Know when you're paying double — <em>before</em> you spend it.</div>
+  </div>
+
+  <div class="mock z">
+    <div class="vsc">
+      <span class="left">DeepSeek Status Bar</span><span class="sp"></span>
+      <span class="sb off">
+        <span>💚</span><span>2h14m</span>
+        <svg class="card-ico" viewBox="0 0 22 16"><rect x="1" y="1" width="20" height="14" rx="2.5"/><line x1="1" y1="5.5" x2="21" y2="5.5"/></svg>
+        <span class="mono">$0.0031<span class="sep">/</span>$0.0012</span>
+        <span class="tok mono">1.20M<span class="sep">/</span>0.90M</span>
+      </span>
+    </div>
+    <div class="vsc">
+      <span class="left">DeepSeek Status Bar</span><span class="sp"></span>
+      <span class="sb pk">
+        <span>⚡</span><span>0h45m</span>
+        <svg class="card-ico" viewBox="0 0 22 16"><rect x="1" y="1" width="20" height="14" rx="2.5"/><line x1="1" y1="5.5" x2="21" y2="5.5"/></svg>
+        <span class="mono">$0.0078<span class="sep">/</span>$0.0012</span>
+        <span class="tok mono">1.20M<span class="sep">/</span>0.90M</span>
+      </span>
+    </div>
+  </div>
+
+  <div class="strip z">
+    <span class="lbl">Peak · UTC Mon–Fri</span>
+    <div class="tl">
+      <i class="off" style="width:4.1667%"></i>
+      <i class="pk"  style="width:12.5%"></i>
+      <i class="off" style="width:8.3333%"></i>
+      <i class="pk"  style="width:16.6667%"></i>
+      <i class="off" style="width:58.3333%"></i>
+    </div>
+    <span class="lbl">Weekends off-peak</span>
+  </div>
+
+  <div class="rates z">
+    <div class="chip g"><span class="dot"></span><span class="n">Off-peak</span>
+      <span class="v mono">$0.003 · $0.15 · $0.60</span></div>
+    <div class="chip a"><span class="dot"></span><span class="n">Peak ×2</span>
+      <span class="v mono">$0.006 · $0.30 · $1.20</span></div>
+  </div>
+
+  <footer class="z">
+    <span>real <span class="mono">usage</span> per request · cache hit / miss / output split</span>
+    <span>github.com/<code>Z1Code</code>/deepseek-status-bar-for-copilot</span>
+  </footer>
+</div>
+</body>
+</html>
