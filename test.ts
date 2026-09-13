@@ -6,6 +6,7 @@ import * as path from "path";
 import {
   isPeakBeijing,
   currentBeijingSegment,
+  peakStateAt,
   costFromUsage,
   modelPrice,
   applyOverrides,
@@ -52,15 +53,32 @@ const bjIso = (y: number, m: number, d: number, h: number, min = 0): string =>
   check("seg 04:00 跨夜", currentBeijingSegment(bjIso(2026, 8, 26, 4)).range, "18:00-09:00");
   check("seg Sat", currentBeijingSegment(bjIso(2026, 8, 29, 10)).range, "00:00-24:00");
 
-  // flash：1M 未命中 + 1M 命中 + 1M 输出
-  check("cost flash 非峰", costFromUsage(2e6, 1e6, 1e6, 1e6, "deepseek-v4-flash", false), 6.05);
-  check("cost flash 峰 ×2", costFromUsage(2e6, 1e6, 1e6, 1e6, "deepseek-v4-flash", true), 12.1);
+  // flash（2026-09-10 起）：1M 未命中 + 1M 命中 + 1M 输出 = 1 + 0.02 + 4
+  check("cost flash 非峰", costFromUsage(2e6, 1e6, 1e6, 1e6, "deepseek-v4-flash", false), 5.02);
+  check("cost flash 峰 ×2", costFromUsage(2e6, 1e6, 1e6, 1e6, "deepseek-v4-flash", true), 10.04);
   // pro：1M 未命中 + 1M 输出
   check("cost pro 非峰", costFromUsage(1e6, 1e6, 0, 1e6, "deepseek-v4-pro", false), 18);
-  check("modelPrice 未知回退", modelPrice("nope").cache_hit, 0.05);
+  check("modelPrice 未知回退", modelPrice("nope").cache_hit, 0.02);
   const ov = applyOverrides({ "deepseek-v4-flash": { cache_hit: 9 } });
   check("applyOverrides 覆盖", ov["deepseek-v4-flash"].cache_hit, 9);
   check("applyOverrides 其余保留", ov["deepseek-v4-pro"].cache_hit, 0.15);
+}
+
+// ---------- 1b. 计费段倒计时（UTC 绝对时刻） ----------
+{
+  const MIN = 60_000;
+  const st = (iso: string) => peakStateAt(Date.parse(iso));
+  // 高峰窗口 = UTC 周一~五 01:00-04:00、06:00-10:00
+  check("st Tue 00:30 闲时", st("2026-08-25T00:30:00Z").peak, false);
+  check("st Tue 00:30 距高峰 30m", st("2026-08-25T00:30:00Z").remainMs / MIN, 30);
+  check("st Tue 02:00 高峰", st("2026-08-25T02:00:00Z").peak, true);
+  check("st Tue 02:00 距闲时 120m", st("2026-08-25T02:00:00Z").remainMs / MIN, 120);
+  check("st Tue 04:30 距高峰 90m", st("2026-08-25T04:30:00Z").remainMs / MIN, 90);
+  check("st Tue 11:00 距次日高峰 14h", st("2026-08-25T11:00:00Z").remainMs / MIN, 14 * 60);
+  // 周五 10:00 后直到周一 01:00 都是闲时 → 62 小时
+  check("st Fri 11:00 距周一 62h", st("2026-08-28T11:00:00Z").remainMs / MIN, 62 * 60);
+  check("st Sat 全天闲时", st("2026-08-29T02:00:00Z").peak, false);
+  check("st Sat 距周一 47h", st("2026-08-29T02:00:00Z").remainMs / MIN, 47 * 60);
 }
 
 // ---------- 2. 区间窗口 ----------
@@ -106,8 +124,8 @@ const bjIso = (y: number, m: number, d: number, h: number, min = 0): string =>
   check("today count", s.count, 3);
   check("today count402", s.count402, 1);
   check("today prompt", s.p, 2e6);
-  // r1 峰:1.5×2=3.0, r2 非峰:1.5, r402:0 → 4.5
-  check("today cost", s.cost.toFixed(4), "4.5000");
+  // r1 峰:1×2=2.0, r2 非峰:1, r402:0 → 3.0
+  check("today cost", s.cost.toFixed(4), "3.0000");
   check("today chCost=0", s.chCost, 0);
   check("avgMs (无ms的402不计)", s.avgMs, 1500);
   check("maxMs", s.maxMs, 2000);

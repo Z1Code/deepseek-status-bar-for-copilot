@@ -18,6 +18,8 @@ import {
 } from "./stats";
 import {
   isPeakBeijing,
+  peakStateAt,
+  peakWindowsLocal,
   ModelPrice,
   applyOverrides,
   setPricingTable,
@@ -284,6 +286,10 @@ function renderStatusBar() {
     }
   }
 
+  // 计费段徽标 + 距离下次切换的倒计时（所有显示格式都会带上）
+  const ps = peakStateAt();
+  statusBar.text = `${ps.peak ? "⚡" : "💚"} ${fmtDur(ps.remainMs)}  ${statusBar.text}`;
+
   if (fmt === "balance" && balanceLow) {
     statusBar.backgroundColor = new vscode.ThemeColor(
       "statusBarItem.warningBackground",
@@ -297,7 +303,13 @@ function renderStatusBar() {
       ? `${t("balance")} ${fmtMoney(balanceVal, cur, rate)}`
       : `${t("balance")} ${t("balanceNone")}`;
   statusBar.tooltip = new vscode.MarkdownString(
-    `${t("todayBeijing")}\n\n` +
+    `${ps.peak ? t("peakNow") : t("offPeakNow")} · ${
+      ps.peak ? t("offPeakIn") : t("peakIn")
+    } ${fmtDur(ps.remainMs)}\n` +
+      `${t("peakWindows")}: ${peakWindowsLocal().join("  ")} ${t(
+        "localTime",
+      )}\n\n` +
+      `${t("todayBeijing")}\n\n` +
       `${t("cost")} ${fmtMoney(s.cost, cur, rate)} / ${t("cacheHit")} ${fmtMoney(
         s.chCost,
         cur,
@@ -316,6 +328,14 @@ function fmtTok(n: number): string {
   if (n < 1000) return String(n);
   if (n < 1_000_000) return `${(n / 1000).toFixed(1)}k`;
   return `${(n / 1e6).toFixed(2)}M`;
+}
+
+/** 毫秒 → "2h14m" / "14m"，用于状态栏的计费段倒计时。 */
+function fmtDur(ms: number): string {
+  const total = Math.max(0, Math.round(ms / 60000));
+  const h = Math.floor(total / 60);
+  const m = total % 60;
+  return h > 0 ? `${h}h${String(m).padStart(2, "0")}m` : `${m}m`;
 }
 
 function showStats() {

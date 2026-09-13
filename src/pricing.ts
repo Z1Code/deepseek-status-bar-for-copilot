@@ -1,5 +1,6 @@
-// 官方定价表与费用计算（DeepSeek，20260803T000000）。
-// - 高峰价 = 空闲价 × 2；高峰 = 北京时间周一~五 9-12、14-18。
+// 官方定价表与费用计算（DeepSeek，2026-09-10 12:00 北京时间起生效）。
+// - 高峰价 = 空闲价 × 2。
+// - 高峰 = UTC 周一~五 01:00-04:00 与 06:00-10:00（其余全部为闲时，含整个周末）。
 // - 单位：元 / 百万 tokens。
 
 import dayjs from "dayjs";
@@ -13,9 +14,9 @@ export interface ModelPrice {
 }
 
 export const PRICING: Record<string, ModelPrice> = {
-  "deepseek-v4-flash": { cache_hit: 0.05, cache_miss: 1.5, output: 4.5 },
+  "deepseek-v4-flash": { cache_hit: 0.02, cache_miss: 1, output: 4 },
   "deepseek-v4-pro": { cache_hit: 0.15, cache_miss: 4.5, output: 13.5 },
-  "deepseek-v4-flash-vision-exp": { cache_hit: 0.05, cache_miss: 1.5, output: 4.5 },
+  "deepseek-v4-flash-vision-exp": { cache_hit: 0.02, cache_miss: 1, output: 4 },
 };
 
 export const DEFAULT_MODEL = "deepseek-v4-flash";
@@ -53,13 +54,84 @@ export function modelPrice(model: string): ModelPrice {
 const bj = (ts: Date | string | number): dayjs.Dayjs =>
   dayjs.utc(ts).add(8, "hour");
 
-/** tsUtc（Date 或 ISO 字符串）是否落在北京时间高峰时段（周一~五 9-12、14-18）。 */
+// --- 高峰时段：以 UTC 绝对时刻为唯一事实来源 -----------------------------
+// 官方（api-docs.deepseek.com/quick_start/pricing）：高峰 = UTC 周一~五
+// 01:00-04:00 与 06:00-10:00，其余时间（含整个周末）一律闲时。
+// 判断基于 UTC，因此与运行 VS Code 的机器时区无关，在任何时区都成立。
+const MIN_MS = 60_000;
+const DAY_MS = 24 * 60 * MIN_MS;
+
+/** 两个高峰窗口的「UTC 当日分钟数」起止，仅周一~五生效。 */
+const PEAK_WINDOWS_UTC: readonly (readonly [number, number])[] = [
+  [1 * 60, 4 * 60], // 01:00-04:00 UTC
+  [6 * 60, 10 * 60], // 06:00-10:00 UTC
+];
+
+/** 该 UTC 时刻是否落在高峰窗口内（周一~五）。 */
+function isPeakUtcMs(ms: number): boolean {
+  const d = new Date(ms);
+  const wd = d.getUTCDay(); // 0=周日 .. 6=周六
+  if (wd === 0 || wd === 6) return false;
+  const minutes = d.getUTCHours() * 60 + d.getUTCMinutes();
+  return PEAK_WINDOWS_UTC.some(([a, b]) => minutes >= a && minutes < b);
+}
+
+/** ms 所在那一周的周一 00:00 UTC。 */
+function weekStartUtcMs(ms: number): number {
+  const d = new Date(ms);
+  const midnight = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+  return midnight - ((d.getUTCDay() + 6) % 7) * DAY_MS; // 周日=0 → 回退 6 天
+}
+
+/** 本周 + 下周所有的「高峰 ↔ 闲时」切换时刻（升序）。 */
+function transitionsUtcMs(fromMs: number): number[] {
+  const weekStart = weekStartUtcMs(fromMs);
+  const out: number[] = [];
+  for (let w = 0; w < 2; w++) {
+    for (let d = 0; d < 5; d++) {
+      const dayStart = weekStart + (w * 7 + d) * DAY_MS;
+      for (const [a, b] of PEAK_WINDOWS_UTC) {
+        out.push(dayStart + a * MIN_MS, dayStart + b * MIN_MS);
+      }
+    }
+  }
+  return out.sort((x, y) => x - y);
+}
+
+/** tsUtc（Date 或 ISO 字符串）是否落在高峰时段（UTC 周一~五 01:00-04:00、06:00-10:00）。 */
 export function isPeakBeijing(tsUtc: Date | string): boolean {
-  const bt = bj(tsUtc);
-  const wd = bt.day(); // Sun=0..Sat=6
-  const h = bt.hour();
-  if (wd === 0 || wd === 6) return false; // 周六/周日
-  return (h >= 9 && h < 12) || (h >= 14 && h < 18);
+  const ms = typeof tsUtc === "string" ? Date.parse(tsUtc) : tsUtc.getTime();
+  return Number.isFinite(ms) ? isPeakUtcMs(ms) : false;
+}
+
+export interface PeakState {
+  /** 当前是否按高峰价（×2）计费。 */
+  peak: boolean;
+  /** 距离下一次「高峰 ↔ 闲时」切换的毫秒数。 */
+  remainMs: number;
+}
+
+/** 当前计费状态 + 距离下次切换的倒计时。 */
+export function peakStateAt(ts: Date | number = new Date()): PeakState {
+  const now = typeof ts === "number" ? ts : ts.getTime();
+  const next = transitionsUtcMs(now).find((f) => f > now);
+  return {
+    peak: isPeakUtcMs(now),
+    remainMs: next === undefined ? 0 : Math.max(0, next - now),
+  };
+}
+
+/** 两个高峰窗口在「本机时区」下的显示文本，如 ["21:00–00:00", "02:00–06:00"]。 */
+export function peakWindowsLocal(): string[] {
+  const ref = weekStartUtcMs(Date.now()); // 以本周一为参照，标签自动跟随夏令时
+  const hhmm = (ms: number): string => {
+    const d = new Date(ms);
+    const p = (n: number) => String(n).padStart(2, "0");
+    return `${p(d.getHours())}:${p(d.getMinutes())}`;
+  };
+  return PEAK_WINDOWS_UTC.map(
+    ([a, b]) => `${hhmm(ref + a * MIN_MS)}–${hhmm(ref + b * MIN_MS)}`,
+  );
 }
 
 export interface PeakSegment {

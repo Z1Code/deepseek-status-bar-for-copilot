@@ -2,7 +2,7 @@
   "name": "deepseek-status-bar-for-copilot",
   "displayName": "DeepSeek Status Bar for Copilot",
   "description": "%description%",
-  "version": "0.2.0",
+  "version": "0.3.1",
   "publisher": "zxzxo",
   "license": "MIT",
   "icon": "icon.png",
