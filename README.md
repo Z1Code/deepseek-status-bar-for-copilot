@@ -1,5 +1,20 @@
 <h1 align="center">DeepSeek Status Bar for Copilot</h1>
 
+> **🍴 This is a fork.** It builds on
+> [zxzxn3/deepseek-status-bar-for-copilot](https://github.com/zxzxn3/deepseek-status-bar-for-copilot)
+> (MIT) — all credit for the original extension goes to [@zxzxn3](https://github.com/zxzxn3).
+>
+> **What this fork adds**
+> - **Peak / off-peak rate badge with a countdown** in the status bar —
+>   `💚 2h14m` vs `⚡ 0h45m` — so you know when you're paying double *before* you spend it.
+> - **Fixed the Flash price table,** which was still on the pre-2026-09-10 rates
+>   (`0.05/1.5/4.5` → `0.02/1/4` CNY). Every Flash cost estimate was ~2.5× too high.
+> - **Peak detection rewritten on UTC** as a single source of truth, matching the
+>   official `01:00–04:00` and `06:00–10:00 UTC, Mon–Fri` windows instead of a
+>   hardcoded Beijing offset.
+>
+> See [PATCH-NOTES.md](PATCH-NOTES.md) for the complete delta.
+
 <p align="center">
   <a href="https://marketplace.visualstudio.com/items?itemName=zxzxo.deepseek-status-bar-for-copilot"><img src="https://img.shields.io/badge/VS%20Code%20Marketplace-Install-007ACC?logo=visualstudiocode&logoColor=white&style=for-the-badge" alt="Install from VS Code Marketplace"></a>
   <br/>
